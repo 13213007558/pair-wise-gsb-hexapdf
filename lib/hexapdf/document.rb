@@ -355,6 +355,10 @@ module HexaPDF
         type = (klass <= HexaPDF::Dictionary ? klass.type : nil)
       else
         type ||= deref(data.value[:Type]) if data.value.kind_of?(Hash)
+        if type.nil? && data.stream && data.value.kind_of?(Hash) &&
+            deref(data.value[:FunctionType]) == 4
+          type = :XXFunctionType4
+        end
         if type
           klass = GlobalConfiguration.constantize('object.type_map', type) { nil }
           if (type == :ObjStm || type == :XRef) &&
