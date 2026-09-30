@@ -38,6 +38,7 @@ require 'hexapdf/error'
 require 'hexapdf/serializer'
 require 'hexapdf/xref_section'
 require 'hexapdf/version'
+require 'hexapdf/linearized_writer'
 
 module HexaPDF
 
@@ -48,9 +49,11 @@ module HexaPDF
     #
     # If +incremental+ is +true+ and the document was created from an existing PDF file, the changes
     # are appended to a full copy of the source document.
-    def self.write(document, io, incremental: false)
+    def self.write(document, io, incremental: false, linearize: false)
       if incremental && document.revisions.parser
         new(document, io).write_incremental
+      elsif linearize
+        LinearizedWriter.write(document, io)
       else
         new(document, io).write
       end

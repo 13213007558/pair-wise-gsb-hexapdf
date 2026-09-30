@@ -736,8 +736,8 @@ module HexaPDF
     end
 
     # :call-seq:
-    #   doc.write(filename, incremental: false, validate: true, update_fields: true, optimize: false, compact: true) -> [start_xref, section]
-    #   doc.write(io, incremental: false, validate: true, update_fields: true, optimize: false, compact: true) -> [start_xref, section]
+    #   doc.write(filename, incremental: false, validate: true, update_fields: true, optimize: false, compact: true, linearize: false) -> [start_xref, section]
+    #   doc.write(io, incremental: false, validate: true, update_fields: true, optimize: false, compact: true, linearize: false) -> [start_xref, section]
     #
     # Writes the document to the given file (in case +io+ is a String) or IO stream. Returns the
     # file position of the start of the last cross-reference section and the last XRefSection object
@@ -786,8 +786,15 @@ module HexaPDF
     #
     #   Only change this argument to +false+ if you run the optimization task with 'compact: true'
     #   beforehand or if you know exactly what you do and what not compacting implies.
+    #
+    # linearize::
+    #   Writes a valid linearized PDF so conforming viewers can display the first page after reading
+    #   only the beginning of the file. Linearized writing is not possible in incremental mode.
     def write(file_or_io, incremental: false, validate: true, update_fields: true, optimize: false,
-              compact: true)
+              compact: true, linearize: false)
+      if incremental && linearize
+        raise HexaPDF::Error, "Cannot combine incremental and linearized writing"
+      end
       if update_fields
         trailer.update_id
         if @metadata
@@ -816,9 +823,11 @@ module HexaPDF
       dispatch_message(:before_write)
 
       if file_or_io.kind_of?(String)
-        File.open(file_or_io, 'w+') {|file| Writer.write(self, file, incremental: incremental) }
+        File.open(file_or_io, 'w+') do |file|
+          Writer.write(self, file, incremental: incremental, linearize: linearize)
+        end
       else
-        Writer.write(self, file_or_io, incremental: incremental)
+        Writer.write(self, file_or_io, incremental: incremental, linearize: linearize)
       end
     end
 
