@@ -424,6 +424,21 @@ describe HexaPDF::Type::Page do
     end
   end
 
+  describe "extract_vector_tables" do
+    it "extracts tables from a rectangular area" do
+      page = @doc.pages.add
+      canvas = page.canvas.stroke_color(0)
+      canvas.rectangle(10, 10, 40, 30).stroke
+      canvas.line(10, 25, 50, 25).stroke
+      canvas.font('Helvetica', size: 8).text('A', at: [24, 32])
+
+      table = page.extract_vector_tables(area: [0, 0, 60, 50]).first
+
+      assert_equal([10.0, 50.0], table.column_boundaries)
+      assert_equal(['A', ''], table.cells.map(&:text))
+    end
+  end
+
   describe "index" do
     it "returns the index of the page in the page tree" do
       kid1 = @doc.add({Type: :Pages, Parent: @doc.pages.root, Count: 4})

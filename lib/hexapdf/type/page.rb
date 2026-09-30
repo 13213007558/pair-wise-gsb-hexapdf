@@ -406,6 +406,13 @@ module HexaPDF
                                                      **options)
       end
 
+      # Extracts vector-drawn tables from the page.
+      #
+      # See HexaPDF::Content::VectorTableExtractor.extract for the available +options+.
+      def extract_vector_tables(area: nil, **options)
+        Content::VectorTableExtractor.extract(self, area: area, **options)
+      end
+
       # Returns the index of the page in the page tree.
       def index
         idx = 0
