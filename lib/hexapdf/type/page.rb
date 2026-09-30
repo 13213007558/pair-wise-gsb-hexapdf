@@ -406,6 +406,18 @@ module HexaPDF
                                                      **options)
       end
 
+      # Extracts the tables that are drawn with horizontal and vertical vector lines from
+      # the page.
+      #
+      # The +region+ argument ([llx, lly, urx, ury] in user space coordinates) restricts the
+      # analyzed area and defaults to the page's crop box.
+      #
+      # See HexaPDF::Content::TableExtractor for the available +options+ and the structure of
+      # the returned tables.
+      def extract_tables(region: nil, **options)
+        Content::TableExtractor.new(self, region: region, **options).extract
+      end
+
       # Returns the index of the page in the page tree.
       def index
         idx = 0

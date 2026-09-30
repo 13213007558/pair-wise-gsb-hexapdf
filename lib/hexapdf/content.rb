@@ -54,6 +54,7 @@ module HexaPDF
     autoload(:Operator, 'hexapdf/content/operator')
     autoload(:CanvasComposer, 'hexapdf/content/canvas_composer')
     autoload(:SmartTextExtractor, 'hexapdf/content/smart_text_extractor')
+    autoload(:TableExtractor, 'hexapdf/content/table_extractor')
 
   end
 

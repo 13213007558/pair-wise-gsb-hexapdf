@@ -1,3 +1,11 @@
+## Unreleased
+
+### Added
+
+* [HexaPDF::Content::TableExtractor] for extracting vector-drawn tables (row/column
+  boundaries, cell spans and cell text) from a page or a page region, together with the
+  [HexaPDF::Type::Page#extract_tables] convenience method
+
 ## 1.11.0 - 2026-09-22
 
 ### Added
