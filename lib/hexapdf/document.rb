@@ -736,8 +736,8 @@ module HexaPDF
     end
 
     # :call-seq:
-    #   doc.write(filename, incremental: false, validate: true, update_fields: true, optimize: false, compact: true) -> [start_xref, section]
-    #   doc.write(io, incremental: false, validate: true, update_fields: true, optimize: false, compact: true) -> [start_xref, section]
+    #   doc.write(filename, incremental: false, validate: true, update_fields: true, optimize: false, compact: true, linearize: false) -> [start_xref, section]
+    #   doc.write(io, incremental: false, validate: true, update_fields: true, optimize: false, compact: true, linearize: false) -> [start_xref, section]
     #
     # Writes the document to the given file (in case +io+ is a String) or IO stream. Returns the
     # file position of the start of the last cross-reference section and the last XRefSection object
@@ -786,8 +786,25 @@ module HexaPDF
     #
     #   Only change this argument to +false+ if you run the optimization task with 'compact: true'
     #   beforehand or if you know exactly what you do and what not compacting implies.
+    #
+    # linearize::
+    #   Writes a linearized PDF. The first cross-reference section is followed by the objects,
+    #   including shared resources, needed to display the first page. Incremental writing,
+    #   encryption, object streams and non-zero generation numbers are not supported.
     def write(file_or_io, incremental: false, validate: true, update_fields: true, optimize: false,
-              compact: true)
+              compact: true, linearize: false)
+      if linearize
+        if incremental
+          raise HexaPDF::Error, "Linearized writing cannot be combined with incremental writing"
+        end
+        if encrypted? || trailer[:Encrypt]
+          raise HexaPDF::Error, "Linearized writing requires an unencrypted document"
+        end
+        if revisions.count > 1
+          raise HexaPDF::Error, "Linearized writing requires a single current revision"
+        end
+      end
+
       if update_fields
         trailer.update_id
         if @metadata
@@ -808,17 +825,20 @@ module HexaPDF
       end
 
       optimize_opts = {}
-      optimize_opts[:object_streams] = :generate if optimize
-      optimize_opts[:compact] = true if compact && !incremental
+      unless linearize
+        optimize_opts[:object_streams] = :generate if optimize
+        optimize_opts[:compact] = true if compact && !incremental
+      end
       task(:optimize, **optimize_opts) unless optimize_opts.empty?
       self.version = '1.5' if version < '1.5' if optimize
 
       dispatch_message(:before_write)
 
       if file_or_io.kind_of?(String)
-        File.open(file_or_io, 'w+') {|file| Writer.write(self, file, incremental: incremental) }
+        File.open(file_or_io, 'w+') {|file| Writer.write(self, file, incremental: incremental,
+                                                               linearize: linearize) }
       else
-        Writer.write(self, file_or_io, incremental: incremental)
+        Writer.write(self, file_or_io, incremental: incremental, linearize: linearize)
       end
     end
 

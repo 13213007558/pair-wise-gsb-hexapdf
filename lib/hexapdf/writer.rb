@@ -38,6 +38,7 @@ require 'hexapdf/error'
 require 'hexapdf/serializer'
 require 'hexapdf/xref_section'
 require 'hexapdf/version'
+require_relative 'writer/linearized_layout'
 
 module HexaPDF
 
@@ -48,9 +49,14 @@ module HexaPDF
     #
     # If +incremental+ is +true+ and the document was created from an existing PDF file, the changes
     # are appended to a full copy of the source document.
-    def self.write(document, io, incremental: false)
+    def self.write(document, io, incremental: false, linearize: false)
+      if incremental && linearize
+        raise HexaPDF::Error, "Linearized writing cannot be combined with incremental writing"
+      end
       if incremental && document.revisions.parser
         new(document, io).write_incremental
+      elsif linearize
+        new(document, io).write_linearized
       else
         new(document, io).write
       end
@@ -85,6 +91,14 @@ module HexaPDF
       end
 
       [pos, xref_section]
+    end
+
+    # Writes a linearized PDF that contains all objects needed for displaying the first page in
+    # the first part of the file.
+    def write_linearized
+      layout = LinearizedLayout.build(@document)
+      @io << layout.data
+      [layout.main_xref_offset, layout.xref_section]
     end
 
     # Writes the complete source document unmodified to the IO and then one revision containing all

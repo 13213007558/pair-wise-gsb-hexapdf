@@ -110,6 +110,212 @@ describe HexaPDF::Writer do
     assert_document_conversion(@compressed_input_io)
   end
 
+  describe 'linearized writing' do
+    def linearize_document(pages: 2)
+      document = HexaPDF::Document.new
+      if pages > 0
+        font = document.add({Type: :Font, Subtype: :Type1, BaseFont: :Helvetica})
+        resources = document.add({Font: {F1: font}})
+        pages.times do |index|
+          page = document.pages.add
+          page[:Resources] = resources
+          if pages > 1
+            canvas = page.canvas
+            canvas.font('Helvetica', size: 12)
+            canvas.text(index.zero? ? 'first' : 'later')
+          end
+        end
+      end
+      io = StringIO.new(''.b)
+      document.write(io, linearize: true, update_fields: false)
+      [document, io.string]
+    end
+
+    def xref_entries(data, offset)
+      bytes = data.byteslice(offset, data.bytesize - offset)
+      header = bytes.match(/\Axref\n(\d+) (\d+)\n/)
+      refute_nil(header)
+      first = header[1].to_i
+      entries = {}
+      position = header.end(0)
+      header[2].to_i.times do |index|
+        line = bytes.byteslice(position, 19)
+        entries[first + index] = if line.end_with?('f ')
+                                   [:free, line[0, 10].to_i, line[11, 5].to_i]
+                                 else
+                                   [:in_use, line[0, 10].to_i, line[11, 5].to_i]
+                                 end
+        position += line.bytesize + 1
+      end
+      [entries, bytes[position..].split("startxref\n", 2).first]
+    end
+
+    def parse_trailer(source)
+      tokenizer = HexaPDF::Tokenizer.new(StringIO.new(source))
+      tokenizer.next_token until tokenizer.peek_token == 'trailer'
+      tokenizer.next_token
+      tokenizer.next_object
+    end
+
+    def linearization_information(data)
+      first_offset = data.index("xref\n")
+      first_entries, first_trailer_source = xref_entries(data, first_offset)
+      first_trailer = parse_trailer(first_trailer_source)
+      main_offset = data.rindex(/\nxref\n/) + 1
+      main_entries, main_trailer_source = xref_entries(data, main_offset)
+      main_trailer = parse_trailer(main_trailer_source)
+      parser = HexaPDF::Parser.new(StringIO.new(data), HexaPDF::Document.new)
+      linearization = parser.load_object(HexaPDF::XRefSection.in_use_entry(1, 0, 18))
+      [linearization, first_entries, first_trailer, first_offset, main_entries,
+       main_trailer, main_offset]
+    end
+
+    def first_page_document(data, info)
+      prefix = data.byteslice(0, info[:E])
+      first_entries, = xref_entries(data, info[:E])
+      max_oid = first_entries.keys.max
+      synthetic = +"xref\n0 #{max_oid + 1}\n0000000000 65535 f \n"
+      1.upto(max_oid) do |oid|
+        entry = first_entries[oid]
+        if entry&.first == :in_use
+          synthetic << format("%010d 00000 n \n", entry[1])
+        else
+          synthetic << "0000000000 65535 f \n"
+        end
+      end
+      synthetic << "trailer\n<</Size #{max_oid + 1}/Root #{info[:O]} 0 R>>\n"
+      synthetic << "startxref\n#{info[:E]}\n%%EOF\n"
+      [prefix, HexaPDF::Document.new(io: StringIO.new(prefix + synthetic),
+                                     config: {'parser.try_xref_reconstruction' => false})]
+    end
+
+    class BitReader
+      def initialize(data)
+        @data = data
+        @bits = 0
+      end
+
+      def read(bits)
+        value = 0
+        bits.times do |index|
+          byte = @data.getbyte(@bits / 8) || 0
+          value = (value << 1) | ((byte >> (7 - (@bits % 8))) & 1)
+          @bits += 1
+        end
+        value
+      end
+    end
+
+    it 'writes a verifiable first-page section, shared resources, xrefs and hint data' do
+      _document, data = linearize_document
+      info, first_entries, first_trailer, first_offset, main_entries, main_trailer,
+        main_offset = linearization_information(data)
+      assert_equal(1, info[:Linearized])
+      assert_equal(2, info[:H][0])
+      assert_kind_of(Integer, info[:H][1])
+      assert_equal(3, info[:O])
+      assert_equal(2, info[:N])
+      assert_equal(first_offset, info[:E])
+      assert_equal(main_offset, info[:T])
+      assert_equal(data.bytesize, info[:L])
+      assert_equal(main_offset, first_trailer[:Prev])
+
+      [first_entries, main_entries].each do |entries|
+        entries.each do |oid, (type, offset, gen)|
+          next if type == :free
+          assert_equal("#{oid} #{gen} obj", data[offset, 30].split("\n", 2).first)
+        end
+      end
+
+      hint_offset = main_entries[2][1]
+      hint_length = info[:H][1]
+      hint_header = data[hint_offset, 100]
+      hint_data = hint_header.match(/\/Length (\d+)>>stream\n/m)
+      assert_equal(hint_length, hint_data[1].to_i)
+      stream_start = hint_offset + hint_data.end(0)
+      hint_data = data.byteslice(stream_start, hint_length)
+      assert_equal(info[:H][1], hint_data.bytesize)
+      assert_operator(hint_data.bytesize, :>=, 40 + 32)
+      reader = BitReader.new(hint_data)
+      8.times { assert_operator(reader.read(4), :<=, 15) }
+      assert(hint_data.bytesize > 40)
+
+      prefix, document = first_page_document(data, info)
+      page = document.object(info[:O])
+      assert_equal(info[:E], prefix.bytesize)
+      assert_equal(3, page.oid)
+      assert_equal(:Page, page.type)
+      assert_equal(:Helvetica, page.resources[:Font][:F1][:BaseFont])
+      assert_equal(:Pages, page[:Parent].type)
+      assert(page.contents.length > 0)
+      assert_equal(3, first_trailer[:Root].oid)
+      assert_operator(main_entries[main_trailer[:Root].oid][1], :>=, info[:E])
+      full_document = HexaPDF::Document.new(io: StringIO.new(data))
+      assert_equal(2, full_document.pages.count)
+    end
+
+    it 'handles empty first pages and documents initially written with object streams' do
+      _document, data = linearize_document(pages: 1)
+      info, = linearization_information(data)
+      prefix, document = first_page_document(data, info)
+      page = document.object(info[:O])
+      assert_equal(info[:E], prefix.bytesize)
+      assert_equal(:Page, page.type)
+      assert_nil(page[:Contents])
+      assert_equal(1, info[:N])
+      refute_match('/Type/ObjStm', data)
+    end
+
+    it 'flattens an existing optimized PDF that used object streams before linearization' do
+      compressed_io = StringIO.new(''.b)
+      source = HexaPDF::Document.new
+      source.pages.add
+      source.write(compressed_io, optimize: true, validate: false)
+      assert_match('/Type/ObjStm', compressed_io.string)
+
+      loaded = HexaPDF::Document.new(io: StringIO.new(compressed_io.string))
+      output = StringIO.new(''.b)
+      loaded.write(output, linearize: true, update_fields: false)
+      refute_match('/Type/ObjStm', output.string)
+      assert(HexaPDF::Document.new(io: StringIO.new(output.string)).pages.one?)
+    end
+
+    it 'does not depend on caller object ordering' do
+      outputs = 2.times.map do
+        document = HexaPDF::Document.new
+        font = document.add({Type: :Font, Subtype: :Type1, BaseFont: :Helvetica})
+        resources = document.add({Font: {F1: font}})
+        second = document.pages.add
+        second[:Resources] = resources
+        second.canvas.font('Helvetica', size: 12)
+        second.canvas.text('second')
+        first = document.pages.insert(0)
+        first[:Resources] = resources
+        first.canvas.font('Helvetica', size: 12)
+        first.canvas.text('first')
+        document.trailer[:ID] = ['fixed', 'fixed']
+        io = StringIO.new(''.b)
+        document.write(io, linearize: true, update_fields: false)
+        io.string
+      end
+      assert_equal(outputs.first, outputs.last)
+    end
+
+    it 'rejects unsupported combinations before writing data' do
+      document = HexaPDF::Document.new
+      document.pages.add
+      io = StringIO.new(''.b)
+      assert_raises(HexaPDF::Error) { document.write(io, linearize: true, incremental: true) }
+      assert_equal(0, io.string.bytesize)
+
+      encrypted = HexaPDF::Document.new
+      encrypted.encrypt
+      encrypted.pages.add
+      io = StringIO.new(''.b)
+      assert_raises(HexaPDF::Error) { encrypted.write(io, linearize: true) }
+    end
+  end
+
   describe "write_incremental" do
     it "writes a document in incremental mode" do
       doc = HexaPDF::Document.new(io: @std_input_io)
