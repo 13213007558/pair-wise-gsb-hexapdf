@@ -1,3 +1,13 @@
+## Unreleased
+
+### Added
+
+* [HexaPDF::Task::ReadLogicalStructure] for reading the logical structure
+  (tagged PDF) of a document, resolving roles through the RoleMap, handling
+  integer MCIDs, MCR and OBJR references (including marked content inside Form
+  XObjects), cross-checking the ParentTree and reporting problems without
+  modifying the document
+
 ## 1.11.0 - 2026-09-22
 
 ### Added

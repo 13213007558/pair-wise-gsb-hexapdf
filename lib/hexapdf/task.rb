@@ -67,6 +67,7 @@ module HexaPDF
     autoload(:PDFA, 'hexapdf/task/pdfa')
     autoload(:MergeAcroForm, 'hexapdf/task/merge_acro_form')
     autoload(:ImportPages, 'hexapdf/task/import_pages')
+    autoload(:ReadLogicalStructure, 'hexapdf/task/read_logical_structure')
 
   end
 
