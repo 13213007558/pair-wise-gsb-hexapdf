@@ -40,6 +40,7 @@ require 'hexapdf/dictionary'
 require 'hexapdf/stream'
 require 'hexapdf/type/page_tree_node'
 require 'hexapdf/content'
+require 'hexapdf/content/redaction'
 require 'hexapdf/content/transformation_matrix'
 
 module HexaPDF
@@ -395,6 +396,41 @@ module HexaPDF
         Content::Parser.parse(contents, processor)
       end
 
+      # Redacts the given page-rectangle areas from the page content.
+      #
+      # The operation rewrites the page and reachable Form XObject content streams instead of only
+      # overlaying rectangles. Text is removed at glyph boundaries, image pixels are erased in
+      # cloned image XObjects, and vector graphics intersecting an area may be removed completely.
+      # Unsupported drawing operations cause an error and leave the document unchanged.
+      def redact(*rectangles, fill: true)
+        normalized = Content::Redaction.normalize_rectangles(rectangles)
+        each_annotation do |annotation|
+          next unless annotation[:Rect]
+          annotation_rectangle = Content::Redaction.normalize_rectangles([annotation[:Rect]])[0]
+          if normalized.any? {|rectangle| rectangles_intersect?(rectangle, annotation_rectangle) }
+            raise HexaPDF::Error, 'Redaction rectangle intersects an unsupported annotation'
+          end
+        end
+
+        document.revisions.merge
+        document.revisions.instance_variable_set(:@parser, nil)
+        resource_copy = HexaPDF::Object.deep_copy(resources.value)
+        wrapped_resources = document.wrap(resource_copy, type: :XXResources)
+        clones = []
+        processor = Content::Redaction.new(document, wrapped_resources, normalized,
+                                          fill: fill, clones: clones)
+        begin
+          Content::Parser.parse(contents, processor)
+        rescue StandardError
+          clones.each {|clone| document.delete(clone) }
+          raise
+        end
+        processor.prune_unused_xobjects
+        self[:Resources] = processor.resources
+        self.contents = processor.result_with_fill
+        self
+      end
+
       # Extracts the layouted text from the page.
       #
       # See HexaPDF::Content::SmartTextExtractor.layout_text_runs for the available +options+.
@@ -666,6 +702,11 @@ module HexaPDF
       end
 
       private
+
+      def rectangles_intersect?(first, second)
+        first[0] < second[2] && first[2] > second[0] &&
+          first[1] < second[3] && first[3] > second[1]
+      end
 
       # Returns +true+ if the given object seems to be an annotation.
       def annotation?(obj)

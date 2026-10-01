@@ -52,6 +52,7 @@ module HexaPDF
     autoload(:Processor, 'hexapdf/content/processor')
     autoload(:ColorSpace, 'hexapdf/content/color_space')
     autoload(:Operator, 'hexapdf/content/operator')
+    autoload(:Redaction, 'hexapdf/content/redaction')
     autoload(:CanvasComposer, 'hexapdf/content/canvas_composer')
     autoload(:SmartTextExtractor, 'hexapdf/content/smart_text_extractor')
 
