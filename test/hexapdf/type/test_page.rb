@@ -50,6 +50,60 @@ describe HexaPDF::Type::Page do
     assert(page.must_be_indirect?)
   end
 
+  describe "viewports and geospatial locators" do
+    before do
+      @page = @doc.add({Type: :Page, MediaBox: [0, 0, 100, 200], Rotate: 90})
+      @geo_measure = {Type: :Measure, Subtype: :GEO,
+                      LPTS: [0, 0, 1, 0, 0, 1], GPTS: [0, 0, 1, 0, 0, 1]}
+      @geo = @doc.wrap({Type: :Viewport, Name: 'map', BBox: [0, 0, 100, 200],
+                       Measure: @geo_measure}, type: HexaPDF::Type::Viewport)
+      @rl = @doc.wrap({Type: :Viewport, Name: 'other', BBox: [0, 0, 10, 10],
+                      Measure: {Type: :Measure, Subtype: :RL}},
+                     type: HexaPDF::Type::Viewport)
+      @page[:VP] = [@geo, @rl]
+    end
+
+    it "returns the viewports wrapped as Viewport objects" do
+      assert_equal([HexaPDF::Type::Viewport, HexaPDF::Type::Viewport],
+                   @page.viewports.map(&:class))
+    end
+
+    it "returns a GEO locator by index" do
+      locator = @page.geo_locator
+      assert_instance_of(HexaPDF::Geo::Locator, locator)
+      assert(locator.valid?)
+      assert_equal(90, locator.rotation)
+    end
+
+    it "returns a GEO locator by name" do
+      assert_equal('map', @page.geo_locator('map').viewport[:Name])
+      assert_nil(@page.geo_locator('other'))
+    end
+
+    it "returns all valid GEO locators" do
+      locators = @page.geo_locators
+      assert_equal(1, locators.length)
+      assert_equal('map', locators.first.viewport[:Name])
+    end
+
+    it "includes invalid GEO locators so their status can be inspected" do
+      invalid = @doc.wrap({Type: :Viewport, Name: 'bad', BBox: [0, 0, 10, 10],
+                          Measure: {Type: :Measure, Subtype: :GEO,
+                                    LPTS: [0, 0, 1, 1, 2, 2],
+                                    GPTS: [0, 0, 1, 1, 2, 2]}},
+                         type: HexaPDF::Type::Viewport)
+      @page[:VP] << invalid
+      locators = @page.geo_locators
+      assert_equal([:ok, :collinear_points], locators.map(&:status))
+    end
+
+    it "returns nil when there is no matching viewport" do
+      page = @doc.add({Type: :Page})
+      assert_nil(page.geo_locator)
+      assert_equal([], page.geo_locators)
+    end
+  end
+
   describe "[]" do
     before do
       @root = @doc.add({Type: :Pages})

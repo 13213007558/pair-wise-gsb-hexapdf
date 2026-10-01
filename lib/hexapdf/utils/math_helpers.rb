@@ -52,6 +52,44 @@ module HexaPDF
         radians * 180 / Math::PI
       end
 
+      # Solves the system of linear equations +matrix+ * x = +vector+ where +matrix+ is an
+      # Array of three rows, each row containing three numbers, and +vector+ is an Array of
+      # three numbers.
+      #
+      # Returns the solution as an Array of three numbers, or +nil+ if the matrix is singular
+      # (within the given +eps+ threshold, relative to the magnitude of the pivot values).
+      def solve_linear_system3(matrix, vector, eps = 1e-12)
+        a = matrix.map(&:dup)
+        b = vector.dup
+        scale = a.flatten.map(&:abs).max.to_f
+        return nil if scale.zero?
+
+        3.times do |col|
+          pivot = (col...3).max_by {|row| a[row][col].abs }
+          if a[pivot][col].abs <= eps * scale
+            return nil
+          end
+          if pivot != col
+            a[col], a[pivot] = a[pivot], a[col]
+            b[col], b[pivot] = b[pivot], b[col]
+          end
+
+          ((col + 1)...3).each do |row|
+            factor = a[row][col].to_f / a[col][col]
+            (col...3).each {|j| a[row][j] -= factor * a[col][j] }
+            b[row] -= factor * b[col]
+          end
+        end
+
+        result = Array.new(3, 0.0)
+        2.downto(0) do |row|
+          sum = b[row].to_f
+          ((row + 1)...3).each {|j| sum -= a[row][j] * result[j] }
+          result[row] = sum / a[row][row]
+        end
+        result
+      end
+
     end
 
   end

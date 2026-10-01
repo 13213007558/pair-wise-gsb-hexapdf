@@ -2,6 +2,13 @@
 
 ### Added
 
+* [HexaPDF::Geo::Locator] for reading the geospatial (GEO measure) information of a
+  viewport and transforming page points to geographic coordinates and vice versa
+* [HexaPDF::Type::Viewport] as well as [HexaPDF::Type::Measure::Geo] for representing
+  viewport and GEO measure dictionaries
+* [HexaPDF::Type::Page#viewports], [HexaPDF::Type::Page#geo_locator] and
+  [HexaPDF::Type::Page#geo_locators] for accessing the geospatial information attached
+  to a page
 * [HexaPDF::DigitalSignature::Signatures#add_ltv_information] for adding
   long term validation information to signed documents
 * [HexaPDF::Type::DocumentSecurityStore] convenience methods for accessing

@@ -56,6 +56,7 @@ require 'hexapdf/font_loader'
 require 'hexapdf/layout'
 require 'hexapdf/digital_signature'
 require 'hexapdf/utils'
+require 'hexapdf/geo'
 
 begin
   require 'hexapdf/cext'

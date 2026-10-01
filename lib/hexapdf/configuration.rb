@@ -771,6 +771,7 @@ module HexaPDF
                         MCR: 'HexaPDF::Type::MarkedContentReference',
                         OBJR: 'HexaPDF::Type::ObjectReference',
                         Measure: 'HexaPDF::Type::Measure',
+                        Viewport: 'HexaPDF::Type::Viewport',
                         DSS: 'HexaPDF::Type::DocumentSecurityStore',
                         VRI: 'HexaPDF::Type::DocumentSecurityStore::ValidationRelatedInformation',
                       },
@@ -842,6 +843,9 @@ module HexaPDF
                           GTS_PDFX: 'HexaPDF::Type::OutputIntent',
                           GTS_PDFA1: 'HexaPDF::Type::OutputIntent',
                           ISO_PDFE1: 'HexaPDF::Type::OutputIntent',
+                        },
+                        Measure: {
+                          GEO: 'HexaPDF::Type::Measure::Geo',
                         },
                       })
 

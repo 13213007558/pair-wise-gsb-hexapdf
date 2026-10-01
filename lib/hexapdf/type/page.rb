@@ -39,6 +39,7 @@ require 'hexapdf/error'
 require 'hexapdf/dictionary'
 require 'hexapdf/stream'
 require 'hexapdf/type/page_tree_node'
+require 'hexapdf/type/viewport'
 require 'hexapdf/content'
 require 'hexapdf/content/transformation_matrix'
 
@@ -273,6 +274,42 @@ module HexaPDF
         else
           :landscape
         end
+      end
+
+      # Returns the viewport dictionaries defined on the page via the /VP entry, wrapping each
+      # one as a HexaPDF::Type::Viewport.
+      #
+      # See: PDF2.0 s14.9.5
+      def viewports
+        (self[:VP] || []).map {|viewport| document.wrap(viewport, type: Type::Viewport) }
+      end
+
+      # Returns HexaPDF::Geo::Locator objects for all viewports that contain a GEO measure
+      # dictionary, including ones whose mapping could not be established (check their #status).
+      #
+      # See #geo_locator and HexaPDF::Geo::Locator.new for the keyword arguments.
+      def geo_locators(**kwargs)
+        viewports.filter_map do |viewport|
+          measure = viewport[:Measure]
+          next unless measure && measure[:Subtype] == :GEO
+          viewport.geo_locator(self, **kwargs)
+        end
+      end
+
+      # Returns the HexaPDF::Geo::Locator for the given geospatial viewport, or +nil+ if no such
+      # viewport exists.
+      #
+      # The viewport can be specified by its index in the /VP array or by its /Name.
+      #
+      # See HexaPDF::Geo::Locator.new for the keyword arguments.
+      def geo_locator(index_or_name = 0, **kwargs)
+        viewport = viewports.find.with_index do |candidate, index|
+          measure = candidate[:Measure]
+          measure && measure[:Subtype] == :GEO &&
+            (index == index_or_name ||
+              (index_or_name.kind_of?(String) && candidate[:Name] == index_or_name))
+        end
+        viewport&.geo_locator(self, **kwargs)
       end
 
       # Rotates the page +angle+ degrees counterclockwise where +angle+ has to be a multiple of 90.
