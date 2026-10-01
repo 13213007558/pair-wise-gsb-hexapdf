@@ -406,6 +406,18 @@ module HexaPDF
                                                      **options)
       end
 
+      # Redacts all visible content intersecting one of the given rectangles.
+      #
+      # Unlike painting a white rectangle over existing content, this method rewrites page and Form
+      # XObject content streams, removes affected text and vectors, and rewrites or removes bitmap
+      # image data. Shared Form XObjects and images are copied for affected uses.
+      #
+      # The operation is rejected without modifying the document if an intersecting drawing
+      # construct cannot be handled safely.
+      def redact(*rectangles, color: [0, 0, 0])
+        Content::Redaction.redact(self, rectangles, color: color)
+      end
+
       # Returns the index of the page in the page tree.
       def index
         idx = 0
