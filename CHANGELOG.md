@@ -1,3 +1,15 @@
+## Unreleased
+
+### Added
+
+* [HexaPDF::Document::Structure], accessible via HexaPDF::Document#structure,
+  for reading the logical structure of tagged PDF documents: structure element
+  roles (resolved through the /RoleMap), language, alternative text, children
+  and associated page content; handles integer MCIDs, MCRs (including those in
+  Form XObjects) and OBJRs, cross-checks the ParentTree and provides diagnostics
+  for invalid structures without modifying the document
+
+
 ## 1.11.0 - 2026-09-22
 
 ### Added

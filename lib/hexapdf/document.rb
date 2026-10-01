@@ -124,6 +124,7 @@ module HexaPDF
     autoload(:Layout, 'hexapdf/document/layout')
     autoload(:Metadata, 'hexapdf/document/metadata')
     autoload(:Annotations, 'hexapdf/document/annotations')
+    autoload(:Structure, 'hexapdf/document/structure')
 
     # :call-seq:
     #   Document.open(filename, **docargs)                   -> doc
@@ -547,6 +548,14 @@ module HexaPDF
     # objects.
     def annotations
       @annotations ||= Annotations.new(self)
+    end
+
+    # Returns the Structure object that provides a read-only interface for reading the logical
+    # structure (tagged PDF) of the document.
+    #
+    # See Document::Structure
+    def structure
+      @structure ||= Structure.new(self)
     end
 
     # Returns the Layout object that provides convenience methods for working with the
