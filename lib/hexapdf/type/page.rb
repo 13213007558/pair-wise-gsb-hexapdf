@@ -568,6 +568,65 @@ module HexaPDF
         self
       end
 
+      # :call-seq:
+      #   page.each_viewport {|viewport| block}    -> page
+      #   page.each_viewport                       -> Enumerator
+      #
+      # Yields each viewport dictionary associated with this page (PDF2.0 s12.9.3).
+      #
+      # Entries of the /VP array may either be viewport dictionaries or references to annotations
+      # that carry a /VP entry; both are yielded as HexaPDF::Type::Viewport objects.
+      def each_viewport
+        return to_enum(__method__) unless block_given?
+        dictionary = ->(obj) { obj.is_a?(HexaPDF::Dictionary) || obj.is_a?(Hash) }
+        Array(self[:VP]).each do |entry|
+          resolved = entry
+          if dictionary.call(entry) && !entry.is_a?(HexaPDF::Type::Viewport)
+            inner = entry[:VP]
+            resolved = inner if inner
+          end
+          next unless dictionary.call(resolved) && resolved[:Type] == :Viewport
+          yield(resolved.is_a?(HexaPDF::Type::Viewport) ? resolved :
+                document.wrap(resolved, type: :Viewport))
+        end
+        self
+      end
+
+      # Returns the viewport with the given +name+ (/Name entry), or, without an argument, the
+      # first viewport of the page. Returns +nil+ if no matching viewport exists.
+      def viewport(name = nil)
+        each_viewport.find {|viewport| name.nil? || viewport[:Name] == name }
+      end
+
+      # Returns an array of HexaPDF::Geospatial::AffineLocator objects for all geospatially
+      # referenced (GEO) viewports of this page.
+      #
+      # The locators handle the viewport's /BBox and /PDU as well as the page's /UserUnit. The
+      # page rotation is not applied to a locator's coordinates (they are in unrotated page user
+      # space); use HexaPDF::Geospatial.display_to_page_point and
+      # HexaPDF::Geospatial.page_to_display_point to convert displayed points.
+      def geospatial_locators
+        each_viewport.filter_map do |viewport|
+          measure = viewport[:Measure]
+          next unless measure.respond_to?(:geo?) && measure.geo?
+          HexaPDF::Geospatial::AffineLocator.new(viewport, user_unit: self[:UserUnit] || 1)
+        end
+      end
+
+      # Returns the first usable geospatial locator for the given viewport name (or the first GEO
+      # viewport if +name+ is +nil+), or +nil+ if there is none.
+      #
+      # Note that the returned locator may itself be invalid (see
+      # HexaPDF::Geospatial::AffineLocator#status) if its control points are insufficient,
+      # collinear or the mapping is not invertible.
+      def geospatial_locator(name = nil)
+        viewport = viewport(name)
+        return unless viewport
+        measure = viewport[:Measure]
+        return unless measure.respond_to?(:geo?) && measure.geo?
+        HexaPDF::Geospatial::AffineLocator.new(viewport, user_unit: self[:UserUnit] || 1)
+      end
+
       # Flattens all or the given annotations of the page. Returns an array with all the annotations
       # that couldn't be flattened because they don't have an appearance stream.
       #

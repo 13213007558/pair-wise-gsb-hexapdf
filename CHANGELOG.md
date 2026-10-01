@@ -2,6 +2,14 @@
 
 ### Added
 
+* [HexaPDF::Geospatial::AffineLocator] for reading the geospatial reference of a PDF
+  viewport (BBox/Bounds, LPTS/GPTS, GEO measure, PDU, page rotation and UserUnit) and
+  for transforming page points to the documented geographic/projected coordinates and
+  back, including least-squares fitting with residuals
+* [HexaPDF::Type::Viewport] and [HexaPDF::Type::Measure::GeoCS] for the PDF2.0 geospatial
+  viewport and coordinate-system dictionaries
+* [HexaPDF::Type::Page#each_viewport], [HexaPDF::Type::Page#viewport] and
+  [HexaPDF::Type::Page#geospatial_locator] for accessing a page's geospatial viewports
 * [HexaPDF::DigitalSignature::Signatures#add_ltv_information] for adding
   long term validation information to signed documents
 * [HexaPDF::Type::DocumentSecurityStore] convenience methods for accessing

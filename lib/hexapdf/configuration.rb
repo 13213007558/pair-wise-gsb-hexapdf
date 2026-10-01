@@ -771,6 +771,8 @@ module HexaPDF
                         MCR: 'HexaPDF::Type::MarkedContentReference',
                         OBJR: 'HexaPDF::Type::ObjectReference',
                         Measure: 'HexaPDF::Type::Measure',
+                        GeoCS: 'HexaPDF::Type::Measure::GeoCS',
+                        Viewport: 'HexaPDF::Type::Viewport',
                         DSS: 'HexaPDF::Type::DocumentSecurityStore',
                         VRI: 'HexaPDF::Type::DocumentSecurityStore::ValidationRelatedInformation',
                       },

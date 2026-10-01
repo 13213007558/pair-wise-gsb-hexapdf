@@ -35,3 +35,4 @@
 #++
 
 require 'hexapdf/document'
+require 'hexapdf/geospatial'
