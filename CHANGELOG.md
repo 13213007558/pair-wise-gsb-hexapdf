@@ -1,3 +1,12 @@
+## Unreleased
+
+### Added
+
+* [HexaPDF::Type::Shading] for parsing Coons (type 6) and tensor-product (type 7)
+  patch mesh shadings and for tessellating them into triangles within a given error
+  tolerance
+
+
 ## 1.11.0 - 2026-09-22
 
 ### Added
