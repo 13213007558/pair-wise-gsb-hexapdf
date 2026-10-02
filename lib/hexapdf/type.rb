@@ -59,6 +59,7 @@ module HexaPDF
     autoload(:FileSpecification, 'hexapdf/type/file_specification')
     autoload(:EmbeddedFile, 'hexapdf/type/embedded_file')
     autoload(:Resources, 'hexapdf/type/resources')
+    autoload(:MeshShading, 'hexapdf/type/mesh_shading')
     autoload(:GraphicsStateParameter, 'hexapdf/type/graphics_state_parameter')
     autoload(:Image, 'hexapdf/type/image')
     autoload(:Form, 'hexapdf/type/form')

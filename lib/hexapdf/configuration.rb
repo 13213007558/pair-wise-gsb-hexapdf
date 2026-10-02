@@ -720,6 +720,7 @@ module HexaPDF
                         XXInfo: 'HexaPDF::Type::Info',
                         XXNames: 'HexaPDF::Type::Names',
                         XXResources: 'HexaPDF::Type::Resources',
+                        Shading: 'HexaPDF::Type::MeshShading',
                         XXTrailer: 'HexaPDF::Type::Trailer',
                         XXViewerPreferences: 'HexaPDF::Type::ViewerPreferences',
                         Action: 'HexaPDF::Type::Action',
