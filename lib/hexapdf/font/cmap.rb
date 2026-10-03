@@ -138,43 +138,65 @@ module HexaPDF
         @codespace_ranges << [first, rest]
       end
 
-      # Parses the string and returns all character codes.
+      # Yields each character code together with its parsing status and byte length.
       #
-      # An error is raised if the string contains invalid bytes.
-      def read_codes(string)
-        codes = []
+      # The status is +:ok+ for a valid code, +:invalid+ for a byte outside all codespace ranges
+      # and +:incomplete+ if a multi-byte code is truncated at the end of the string.
+      def each_code(string)
+        return enum_for(__method__, string) unless block_given?
+
         bytes = string.bytes
         length = bytes.length
         i = 0
 
         while i < length
           byte = bytes[i]
-          i += 1
-          code = 0
-
-          found = @codespace_ranges.any? do |first_byte_range, rest_ranges|
+          code_length = 1
+          valid_range = nil
+          @codespace_ranges.each do |first_byte_range, rest_ranges|
             next unless first_byte_range.cover?(byte)
+            next if i + 1 + rest_ranges.length > length
 
-            code = (code << 8) + byte
-            valid = rest_ranges.all? do |range|
-              if i < length
-                byte = bytes[i]
-                i += 1
-              else
-                raise HexaPDF::Error, "Missing bytes while reading codes via CMap"
-              end
-              code = (code << 8) + byte
-              range.cover?(byte)
-            end
+            all_valid = rest_ranges.each_with_index.all? {|range, index| range.cover?(bytes[i + index + 1]) }
+            next unless all_valid
 
-            codes << code if valid
+            valid_range = [first_byte_range, rest_ranges]
+            break
           end
 
-          unless found
-            raise HexaPDF::Error, "Invalid byte while reading codes via CMap: #{byte}"
+          if valid_range
+            code = 0
+            (valid_range.last.length + 1).times do |index|
+              code = (code << 8) | bytes[i + index]
+            end
+            code_length += valid_range.last.length
+            i += code_length
+            yield(code, :ok, code_length)
+          elsif i == length - 1 &&
+              @codespace_ranges.any? {|first, rest| first.cover?(byte) && rest.length > 0 }
+            i += 1
+            yield(byte, :incomplete, 1)
+          else
+            i += 1
+            yield(byte, :invalid, 1)
           end
         end
+      end
 
+      # Parses the string and returns all character codes.
+      #
+      # An error is raised if the string contains invalid bytes.
+      def read_codes(string)
+        codes = []
+        each_code(string) do |code, status, _length|
+          case status
+          when :ok then codes << code
+          when :invalid
+            raise HexaPDF::Error, "Invalid byte while reading codes via CMap: #{code}"
+          else
+            raise HexaPDF::Error, "Missing bytes while reading codes via CMap"
+          end
+        end
         codes
       end
 
@@ -201,6 +223,11 @@ module HexaPDF
           end
         end
         (cid == -1 ? 0 : cid)
+      end
+
+      # Returns +true+ if the CMap explicitly maps the given character code to a CID.
+      def cid_mapped?(code)
+        @cid_mapping.key?(code) || @cid_range_mappings.any? {|range, _| range.cover?(code) }
       end
 
       # Adds a mapping from character code to Unicode string in UTF-8 encoding.

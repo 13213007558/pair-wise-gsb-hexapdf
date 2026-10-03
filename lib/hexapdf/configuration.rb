@@ -635,6 +635,7 @@ module HexaPDF
                         pdfa: 'HexaPDF::Task::PDFA',
                         merge_acro_form: 'HexaPDF::Task::MergeAcroForm',
                         import_pages: 'HexaPDF::Task::ImportPages',
+                        audit_text_extraction: 'HexaPDF::Task::AuditTextExtraction',
                       })
 
   # The global configuration object, providing the following options:

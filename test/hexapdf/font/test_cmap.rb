@@ -69,6 +69,15 @@ describe HexaPDF::Font::CMap do
     it "fails if too few bytes for a valid code are available" do
       assert_raises(HexaPDF::Error) { @cmap.read_codes("\x82") }
     end
+
+    it "reports invalid and incomplete codes without consuming following bytes" do
+      assert_equal([[0xdf, :invalid, 1], [0x40, :ok, 1]],
+                   @cmap.each_code("\xdf\x40").to_a)
+      assert_equal([[0x82, :invalid, 1], [0xfd, :invalid, 1], [0x40, :ok, 1]],
+                   @cmap.each_code("\x82\xfd\x40").to_a)
+      assert_equal([[0x82, :incomplete, 1]],
+                   @cmap.each_code("\x82").to_a)
+    end
   end
 
   describe "CID definition and retrieval" do
@@ -88,6 +97,12 @@ describe HexaPDF::Font::CMap do
 
     it "returns 0 for unknown code-to-CID mappings" do
       assert_equal(0, @cmap.to_cid(57))
+    end
+
+    it "can distinguish an explicit CID 0 from a missing CID mapping" do
+      @cmap.add_cid_mapping(5, 0)
+      assert(@cmap.cid_mapped?(5))
+      refute(@cmap.cid_mapped?(6))
     end
   end
 
