@@ -1,3 +1,11 @@
+## Unreleased
+
+### Added
+
+* [HexaPDF::Type::Function] as base class for PDF functions and
+  [HexaPDF::Type::Functions::PostScriptCalculatorFunction] for evaluating
+  PostScript calculator functions (function type 4), e.g. for color conversions
+
 ## 1.11.0 - 2026-09-22
 
 ### Added
