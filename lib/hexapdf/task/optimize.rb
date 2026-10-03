@@ -78,7 +78,8 @@ module HexaPDF
       # prune_page_resources::
       #   Removes all unused XObjects from the resources dictionaries of all pages. It is
       #   recommended to also set the +compact+ argument because otherwise the unused XObjects won't
-      #   be deleted from the document.
+      #   be deleted from the document. For document-level cleanup that also follows Form
+      #   XObjects, patterns, soft masks and Type3 fonts, use the :clean_resources task instead.
       #
       #   This is sometimes necessary after importing pages from other PDF files that use a single
       #   resources dictionary for all pages.

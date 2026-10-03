@@ -63,6 +63,7 @@ module HexaPDF
   module Task
 
     autoload(:Optimize, 'hexapdf/task/optimize')
+    autoload(:CleanResources, 'hexapdf/task/clean_resources')
     autoload(:Dereference, 'hexapdf/task/dereference')
     autoload(:PDFA, 'hexapdf/task/pdfa')
     autoload(:MergeAcroForm, 'hexapdf/task/merge_acro_form')

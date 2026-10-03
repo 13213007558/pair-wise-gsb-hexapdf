@@ -631,6 +631,7 @@ module HexaPDF
                       },
                       'task.map' => {
                         optimize: 'HexaPDF::Task::Optimize',
+                        clean_resources: 'HexaPDF::Task::CleanResources',
                         dereference: 'HexaPDF::Task::Dereference',
                         pdfa: 'HexaPDF::Task::PDFA',
                         merge_acro_form: 'HexaPDF::Task::MergeAcroForm',

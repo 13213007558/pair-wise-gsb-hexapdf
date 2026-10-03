@@ -1,3 +1,12 @@
+## Unreleased
+
+### Added
+
+* [HexaPDF::Task::CleanResources] for document-level cleanup of unused entries
+  in resource dictionaries, based on the actual content stream operators and
+  following indirect usage through Form XObjects, tiling patterns, soft masks
+  and Type3 fonts
+
 ## 1.11.0 - 2026-09-22
 
 ### Added
