@@ -773,6 +773,7 @@ module HexaPDF
                         Measure: 'HexaPDF::Type::Measure',
                         DSS: 'HexaPDF::Type::DocumentSecurityStore',
                         VRI: 'HexaPDF::Type::DocumentSecurityStore::ValidationRelatedInformation',
+                       Function: 'HexaPDF::Type::Function',
                       },
                       'object.subtype_map' => {
                         nil => {

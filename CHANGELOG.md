@@ -1,3 +1,11 @@
+## Unreleased
+
+### Added
+
+* [HexaPDF::Type::Function#call] for evaluating PDF functions directly in
+  Ruby, including support for FunctionType 4 (PostScript calculator) functions
+  without relying on an external PDF tool
+
 ## 1.11.0 - 2026-09-22
 
 ### Added
