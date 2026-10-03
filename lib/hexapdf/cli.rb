@@ -48,6 +48,7 @@ require 'hexapdf/cli/watermark'
 require 'hexapdf/cli/image2pdf'
 require 'hexapdf/cli/form'
 require 'hexapdf/cli/fonts'
+require 'hexapdf/cli/text_audit'
 require 'hexapdf/cli/usage'
 require 'hexapdf/cli/debug_info'
 require 'hexapdf/version'
@@ -125,6 +126,7 @@ module HexaPDF
         add_command(HexaPDF::CLI::Image2PDF.new)
         add_command(HexaPDF::CLI::Form.new)
         add_command(HexaPDF::CLI::Fonts.new)
+        add_command(HexaPDF::CLI::TextAudit.new)
         add_command(HexaPDF::CLI::Usage.new)
         add_command(HexaPDF::CLI::DebugInfo.new)
         add_command(CmdParse::HelpCommand.new)

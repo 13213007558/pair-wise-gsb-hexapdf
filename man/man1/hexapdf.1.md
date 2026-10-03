@@ -338,6 +338,58 @@ The following information is shown for each font:
 > : The PDF internal object identifier consisting of the object and generation numbers.
 
 
+### text-audit
+
+Synopsis: `text-audit` \[`OPTIONS`] *PDF*
+
+This read-only command audits whether characters that are actually painted by text operators can
+reliably be extracted back to Unicode. Only character codes really used in page content streams
+(including nested Form XObjects) are examined; the complete character sets declared by the font
+dictionaries are not treated as problems. Characters are never guessed from font names and no
+mappings are added or repaired.
+
+For each used code the command traces and reports the relevant mapping chain:
+
+* simple fonts: code -> Encoding/glyph name (/Differences) -> ToUnicode
+* Type0 fonts: code -> CID CMap (CID) -> CIDToGIDMap (GID) -> ToUnicode
+
+Findings are classified as:
+
+* `missing_mapping` (error): no path to Unicode for the used code
+* `invalid_unicode` (error): the ToUnicode destination is not valid Unicode (e.g. an unpaired
+  surrogate)
+* `cid_unmapped` (error): the Type0 CID CMap does not map the used code
+* `many_to_one` (warning): several distinct used codes resolve to the same Unicode character
+* `notdef_glyph` (warning): the code reaches the .notdef glyph of the embedded font
+* `one_to_many` (info): one code expands to several Unicode scalars; this is legal (ligatures)
+  and extracts reliably
+* `ok`: unambiguous extraction
+
+Each entry identifies the page, the content stream (including the nested Form XObject path), the
+font resource name and object id, and the raw character bytes from the content stream.
+
+`-i` *PAGES*, `--pages` *PAGES*
+
+: Restricts the audit to the specified pages. See the **PAGES SPECIFICATION** below.
+
+`-p` *PASSWORD*, `--password` *PASSWORD*
+
+: The password to decrypt the *PDF*. Use **-** for *PASSWORD* for reading it from standard input.
+
+`--json` \[*FILE*]
+
+: Writes the report as JSON to *FILE*, or to standard output if *FILE* is omitted.
+
+`--strict`
+
+: Treats warnings as failures in addition to errors.
+
+`--quiet`
+
+: Shows only errors and warnings.
+
+The exit status is 1 if an error (or, with `--strict`, a warning) was found, and 0 otherwise.
+
 ### form
 
 Synopsis: `form` \[`OPTIONS`] *INPUT* \[*OUTPUT*]
