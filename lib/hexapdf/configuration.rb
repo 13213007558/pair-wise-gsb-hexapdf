@@ -635,6 +635,7 @@ module HexaPDF
                         pdfa: 'HexaPDF::Task::PDFA',
                         merge_acro_form: 'HexaPDF::Task::MergeAcroForm',
                         import_pages: 'HexaPDF::Task::ImportPages',
+                        resource_cleanup: 'HexaPDF::Task::ResourceCleanup',
                       })
 
   # The global configuration object, providing the following options:

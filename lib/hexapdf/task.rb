@@ -67,6 +67,7 @@ module HexaPDF
     autoload(:PDFA, 'hexapdf/task/pdfa')
     autoload(:MergeAcroForm, 'hexapdf/task/merge_acro_form')
     autoload(:ImportPages, 'hexapdf/task/import_pages')
+    autoload(:ResourceCleanup, 'hexapdf/task/resource_cleanup')
 
   end
 
