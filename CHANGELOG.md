@@ -1,3 +1,11 @@
+## Unreleased
+
+### Added
+
+* [HexaPDF::RandomAccessIO] for parsing PDF files from sources that only
+  provide ranged reads (e.g. object storage) without downloading the whole
+  file, with a caller-bounded chunk cache and version change detection
+
 ## 1.11.0 - 2026-09-22
 
 ### Added
