@@ -1,3 +1,11 @@
+## Unreleased
+
+### Added
+
+* [HexaPDF::RandomAccessIO] for reading PDF documents from random-access range
+  sources (like object storage services) without downloading the whole file,
+  with caller-limited caching and source version change detection
+
 ## 1.11.0 - 2026-09-22
 
 ### Added
