@@ -54,6 +54,7 @@ require 'hexapdf/importer'
 require 'hexapdf/image_loader'
 require 'hexapdf/font_loader'
 require 'hexapdf/layout'
+require 'hexapdf/imposition'
 require 'hexapdf/digital_signature'
 require 'hexapdf/utils'
 

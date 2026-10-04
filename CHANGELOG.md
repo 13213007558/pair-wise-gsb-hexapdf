@@ -1,3 +1,12 @@
+## Unreleased
+
+### Added
+
+* [HexaPDF::Imposition::SaddleStitch] for imposing the pages of a document (in
+  reading order) onto sheets for saddle-stitched booklet printing, with support
+  for signatures, left/right binding, duplex flipping modes, creep compensation,
+  blank padding pages, links, annotations and outline items
+
 ## 1.11.0 - 2026-09-22
 
 ### Added
