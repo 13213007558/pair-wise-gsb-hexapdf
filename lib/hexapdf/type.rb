@@ -90,6 +90,7 @@ module HexaPDF
     autoload(:ObjectReference, 'hexapdf/type/object_reference')
     autoload(:Measure, 'hexapdf/type/measure')
     autoload(:DocumentSecurityStore, 'hexapdf/type/document_security_store')
+    autoload(:Shading, 'hexapdf/type/shading')
 
   end
 

@@ -714,6 +714,7 @@ module HexaPDF
                         ExtGState: 'HexaPDF::Type::GraphicsStateParameter',
                         Font: 'HexaPDF::Type::Font',
                         FontDescriptor: 'HexaPDF::Type::FontDescriptor',
+                        Shading: 'HexaPDF::Type::Shading',
                         XXEmbeddedFileParameters: 'HexaPDF::Type::EmbeddedFile::Parameters',
                         XXEmbeddedFileParametersMacInfo: 'HexaPDF::Type::EmbeddedFile::MacInfo',
                         XXFilespecEFDictionary: 'HexaPDF::Type::FileSpecification::EFDictionary',

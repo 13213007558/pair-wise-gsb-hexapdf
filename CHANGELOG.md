@@ -1,3 +1,10 @@
+## Unreleased
+
+### Added
+
+* [HexaPDF::Type::Shading] for parsing and sampling Type 6 (Coons patch mesh) and
+  Type 7 (tensor-product patch mesh) shadings
+
 ## 1.11.0 - 2026-09-22
 
 ### Added
