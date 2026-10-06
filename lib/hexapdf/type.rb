@@ -36,6 +36,7 @@
 
 require 'hexapdf/type/actions'
 require 'hexapdf/type/annotations'
+require 'hexapdf/type/shading'
 
 module HexaPDF
 
@@ -58,6 +59,8 @@ module HexaPDF
     autoload(:Names, 'hexapdf/type/names')
     autoload(:FileSpecification, 'hexapdf/type/file_specification')
     autoload(:EmbeddedFile, 'hexapdf/type/embedded_file')
+    autoload(:Shading, 'hexapdf/type/shading')
+    autoload(:Function, 'hexapdf/type/function')
     autoload(:Resources, 'hexapdf/type/resources')
     autoload(:GraphicsStateParameter, 'hexapdf/type/graphics_state_parameter')
     autoload(:Image, 'hexapdf/type/image')

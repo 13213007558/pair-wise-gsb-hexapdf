@@ -711,6 +711,7 @@ module HexaPDF
                         Page: 'HexaPDF::Type::Page',
                         Filespec: 'HexaPDF::Type::FileSpecification',
                         EmbeddedFile: 'HexaPDF::Type::EmbeddedFile',
+                        Shading: 'HexaPDF::Type::Shading',
                         ExtGState: 'HexaPDF::Type::GraphicsStateParameter',
                         Font: 'HexaPDF::Type::Font',
                         FontDescriptor: 'HexaPDF::Type::FontDescriptor',
